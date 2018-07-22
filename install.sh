@@ -21,11 +21,17 @@ if [ -z "$SERVICE_USER" ]; then
 fi
 
 if [ -z "$SERVICE_LOGDIR" ]; then
-	SERVICE_LOGDIR=$SERVICE_DIR
+	SERVICE_LOGDIR="/var/log/$SERVICE_NAME"
 fi
 
 if [ -z "$SERVICE_BIN" ]; then
 	SERVICE_BIN="node app.js"
+fi
+
+# Generate log directory
+if ! [ -f "$SERVICE_LOGDIR" ]; then
+	mkdir "$SERVICE_LOGDIR"
+	chown $SERVICE_USER:$SERVICE_USER "$SERVICE_LOGDIR"
 fi
 
 # Generate service script

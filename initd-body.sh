@@ -21,7 +21,7 @@ start() {
 	fi
 	echo "Starting $SERVICE_NAME..." >&2
 	cd $SERVICE_DIR
-	local CMD="$SERVICE_BIN > /dev/null & echo \$!"
+	local CMD="$SERVICE_BIN 1>> $SERVICE_LOGDIR/access.log 2>> $SERVICE_LOGDIR/error.log & echo \$!"
 	su -s "/bin/bash" -c "$CMD" $SERVICE_USER > "$SERVICE_PIDFILE" &
 	echo "$SERVICE_NAME is running." >&2
 }
