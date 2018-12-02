@@ -17,5 +17,13 @@ fi
 
 service $SERVICE_NAME stop
 
+# Remove run directory
+if [ -z "$SERVICE_RUNDIR" ]; then
+	SERVICE_RUNDIR="/var/run/$SERVICE_NAME"
+fi
+if [ -f "$SERVICE_RUNDIR" ]; then
+	rm -rf "$SERVICE_RUNDIR"
+fi
+
 rm -f /etc/init.d/$SERVICE_NAME
 update-rc.d $SERVICE_NAME remove

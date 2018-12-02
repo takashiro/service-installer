@@ -20,18 +20,26 @@ if [ -z "$SERVICE_USER" ]; then
 	exit 1
 fi
 
-if [ -z "$SERVICE_LOGDIR" ]; then
-	SERVICE_LOGDIR="/var/log/$SERVICE_NAME"
-fi
-
 if [ -z "$SERVICE_BIN" ]; then
 	SERVICE_BIN="node app.js"
 fi
 
 # Generate log directory
+if [ -z "$SERVICE_LOGDIR" ]; then
+	SERVICE_LOGDIR="/var/log/$SERVICE_NAME"
+fi
 if ! [ -f "$SERVICE_LOGDIR" ]; then
 	mkdir "$SERVICE_LOGDIR"
 	chown $SERVICE_USER:$SERVICE_USER "$SERVICE_LOGDIR"
+fi
+
+# Generate run directory
+if [ -z "$SERVICE_RUNDIR" ]; then
+	SERVICE_RUNDIR="/var/run/$SERVICE_NAME"
+fi
+if ! [ -f "$SERVICE_RUNDIR" ]; then
+	mkdir "$SERVICE_RUNDIR"
+	chown $SERVICE_USER "$SERVICE_RUNDIR"
 fi
 
 # Generate service script
@@ -52,7 +60,7 @@ echo "SERVICE_LOGDIR=$SERVICE_LOGDIR" >> $SERVICE_NAME
 echo "SERVICE_USER=$SERVICE_USER" >> $SERVICE_NAME
 echo "SERVICE_NAME=$SERVICE_NAME" >> $SERVICE_NAME
 echo "SERVICE_BIN=\"$SERVICE_BIN\"" >> $SERVICE_NAME
-echo "SERVICE_PIDFILE=/var/run/$SERVICE_NAME.pid" >> $SERVICE_NAME
+echo "SERVICE_PIDFILE=$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SERVICE_NAME
 echo "" >> $SERVICE_NAME
 cat $(dirname $0)/initd-body.sh >> $SERVICE_NAME
 
