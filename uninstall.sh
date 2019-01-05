@@ -25,5 +25,11 @@ if [ -f "$SERVICE_RUNDIR" ]; then
 	rm -rf "$SERVICE_RUNDIR"
 fi
 
+# Remove systemd script
+if [ -f /lib/systemd/system/$SERVICE_NAME.service ]; then
+	rm /lib/systemd/system/$SERVICE_NAME.service
+fi
+
+# Remove init.d script
 rm -f /etc/init.d/$SERVICE_NAME
 update-rc.d $SERVICE_NAME remove

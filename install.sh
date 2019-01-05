@@ -20,8 +20,12 @@ if [ -z "$SERVICE_USER" ]; then
 	exit 1
 fi
 
+if [ -z "$SERVICE_ENTRY" ]; then
+	SERVICE_ENTRY="app.js"
+fi
+
 if [ -z "$SERVICE_BIN" ]; then
-	SERVICE_BIN="node app.js"
+	SERVICE_BIN="node $SERVICE_ENTRY"
 fi
 
 # Generate log directory
@@ -64,7 +68,31 @@ echo "SERVICE_PIDFILE=$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SERVICE_NAME
 echo "" >> $SERVICE_NAME
 cat $(dirname $0)/initd-body.sh >> $SERVICE_NAME
 
-# Install service script
+# Install init.d script
 mv $SERVICE_NAME /etc/init.d/$SERVICE_NAME
 chmod 755 /etc/init.d/$SERVICE_NAME
-update-rc.d $SERVICE_NAME defaults
+if ! [ -d "/lib/systemd/system" ]; then
+	update-rc.d $SERVICE_NAME defaults
+fi
+
+# Generate systemd script
+if [ -d "/lib/systemd/system" ]; then
+	SYSTEMD_NAME="$SERVICE_NAME.service"
+
+	echo "[Unit]" > $SYSTEMD_NAME
+	echo "Description=$SERVICE_DESC" >> $SYSTEMD_NAME
+	echo "After=network.target" >> $SYSTEMD_NAME
+	echo "" >> $SYSTEMD_NAME
+	echo "[Service]" >> $SYSTEMD_NAME
+	echo "Type=simple" >> $SYSTEMD_NAME
+	echo "User=$SERVICE_USER" >> $SYSTEMD_NAME
+	echo "PIDFile=$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SYSTEMD_NAME
+	echo "ExecStart=/usr/bin/node $SERVICE_DIR/app.js 1>> $SERVICE_LOGDIR/access.log 2>> $SERVICE_LOGDIR/error.log" >> $SYSTEMD_NAME
+	echo "" >> $SYSTEMD_NAME
+	echo "[Install]" >> $SYSTEMD_NAME
+	echo "WantedBy=multi-user.target" >> $SYSTEMD_NAME
+	echo "" >> $SYSTEMD_NAME
+
+	# Install systemd script
+	mv $SYSTEMD_NAME /lib/systemd/system/
+fi
