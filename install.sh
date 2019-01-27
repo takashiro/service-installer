@@ -33,17 +33,13 @@ if [ -z "$SERVICE_LOGDIR" ]; then
 	SERVICE_LOGDIR="/var/log/$SERVICE_NAME"
 fi
 if ! [ -f "$SERVICE_LOGDIR" ]; then
-	mkdir "$SERVICE_LOGDIR"
+	mkdir -p "$SERVICE_LOGDIR"
 	chown $SERVICE_USER:$SERVICE_USER "$SERVICE_LOGDIR"
 fi
 
-# Generate run directory
+# Define run directory
 if [ -z "$SERVICE_RUNDIR" ]; then
-	SERVICE_RUNDIR="/var/run/$SERVICE_NAME"
-fi
-if ! [ -f "$SERVICE_RUNDIR" ]; then
-	mkdir "$SERVICE_RUNDIR"
-	chown $SERVICE_USER "$SERVICE_RUNDIR"
+	SERVICE_RUNDIR="$SERVICE_NAME"
 fi
 
 # Generate service script
@@ -61,10 +57,11 @@ echo "### END INIT INFO" >> $SERVICE_NAME
 echo "" >> $SERVICE_NAME
 echo "SERVICE_DIR=$SERVICE_DIR" >> $SERVICE_NAME
 echo "SERVICE_LOGDIR=$SERVICE_LOGDIR" >> $SERVICE_NAME
+echo "SERVICE_RUNDIR=/var/run/$SERVICE_LOGDIR" >> $SERVICE_NAME
 echo "SERVICE_USER=$SERVICE_USER" >> $SERVICE_NAME
 echo "SERVICE_NAME=$SERVICE_NAME" >> $SERVICE_NAME
 echo "SERVICE_BIN=\"$SERVICE_BIN\"" >> $SERVICE_NAME
-echo "SERVICE_PIDFILE=$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SERVICE_NAME
+echo "SERVICE_PIDFILE=/var/run/$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SERVICE_NAME
 echo "" >> $SERVICE_NAME
 cat $(dirname $0)/initd-body.sh >> $SERVICE_NAME
 
@@ -84,9 +81,13 @@ if [ -d "/lib/systemd/system" ]; then
 	echo "After=network.target" >> $SYSTEMD_NAME
 	echo "" >> $SYSTEMD_NAME
 	echo "[Service]" >> $SYSTEMD_NAME
+	echo "PermissionsStartOnly=True" >> $SYSTEMD_NAME
 	echo "Type=simple" >> $SYSTEMD_NAME
 	echo "User=$SERVICE_USER" >> $SYSTEMD_NAME
-	echo "PIDFile=$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SYSTEMD_NAME
+	echo "Group=$SERVICE_USER" >> $SYSTEMD_NAME
+	echo "RuntimeDirectory=$SERVICE_RUNDIR" >> $SYSTEMD_NAME
+	echo "RuntimeDirectoryMode=0755" >> $SYSTEMD_NAME
+	echo "PIDFile=/var/run/$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SYSTEMD_NAME
 	echo "ExecStart=/usr/bin/node $SERVICE_DIR/app.js 1>> $SERVICE_LOGDIR/access.log 2>> $SERVICE_LOGDIR/error.log" >> $SYSTEMD_NAME
 	echo "" >> $SYSTEMD_NAME
 	echo "[Install]" >> $SYSTEMD_NAME
