@@ -72,6 +72,9 @@ if ! [ -d "/lib/systemd/system" ]; then
 	update-rc.d $SERVICE_NAME defaults
 fi
 
+# Check the path of Node.js
+NODE_BIN=$(which node)
+
 # Generate systemd script
 if [ -d "/lib/systemd/system" ]; then
 	SYSTEMD_NAME="$SERVICE_NAME.service"
@@ -88,7 +91,7 @@ if [ -d "/lib/systemd/system" ]; then
 	echo "RuntimeDirectory=$SERVICE_RUNDIR" >> $SYSTEMD_NAME
 	echo "RuntimeDirectoryMode=0755" >> $SYSTEMD_NAME
 	echo "PIDFile=/var/run/$SERVICE_RUNDIR/$SERVICE_NAME.pid" >> $SYSTEMD_NAME
-	echo "ExecStart=/usr/bin/node $SERVICE_DIR/app.js 1>> $SERVICE_LOGDIR/access.log 2>> $SERVICE_LOGDIR/error.log" >> $SYSTEMD_NAME
+	echo "ExecStart=$NODE_BIN $SERVICE_DIR/app.js 1>> $SERVICE_LOGDIR/access.log 2>> $SERVICE_LOGDIR/error.log" >> $SYSTEMD_NAME
 	echo "" >> $SYSTEMD_NAME
 	echo "[Install]" >> $SYSTEMD_NAME
 	echo "WantedBy=multi-user.target" >> $SYSTEMD_NAME
